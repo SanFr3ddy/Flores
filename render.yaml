@@ -1,6 +1,7 @@
+# Blueprint de Render: sitio estático (no necesita servidor).
 services:
   - type: web
-    name: flores-amarillas-andy
-    runtime: node
-    buildCommand: npm ci --include=dev && npm run build
-    startCommand: npm start
+    name: para-andy
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
