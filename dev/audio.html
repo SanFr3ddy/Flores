@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prueba de música (render offline)</title>
+    <link rel="icon" href="data:," />
+    <style>
+      html, body { margin: 0; background: #0b0b0b; color: #f3e6b0; font: 14px/1.5 ui-monospace, monospace; }
+      main { padding: 16px; max-width: 900px; }
+      pre { white-space: pre-wrap; }
+      button { font: inherit; padding: 6px 14px; margin-right: 8px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>
+        <button id="render">Renderizar</button>
+        <button id="play" disabled>Escuchar</button>
+      </p>
+      <pre id="out">Pulsa «Renderizar» (o abre con ?run para hacerlo solo).</pre>
+    </main>
+    <script type="module" src="./audio.ts"></script>
+  </body>
+</html>

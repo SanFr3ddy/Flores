@@ -1,0 +1,56 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: #fff6d5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: 'Quicksand', system-ui, sans-serif;
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+  cursor: pointer;
+}
+
+#ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#ui button,
+#ui a,
+#ui [data-interactive] {
+  pointer-events: auto;
+}
+
+.fps-meter {
+  position: fixed;
+  left: 8px;
+  top: 8px;
+  z-index: 10;
+  font: 12px/1 monospace;
+  color: #9f9;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 6px;
+  border-radius: 4px;
+}

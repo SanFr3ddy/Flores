@@ -1,0 +1,837 @@
+/* Botón del sobre (abajo al centro) y carta personal en un diálogo modal */
+
+@property --fade-top {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+@property --fade-bottom {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+:root {
+  --lt-gold-1: #fff6c2;
+  --lt-gold-2: #ffd21f;
+  --lt-gold-3: #f5a300;
+  --lt-ink: #3b2a14;
+  --lt-ink-soft: #5a4220;
+  --lt-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --lt-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  --lt-script: 'Great Vibes', 'Caveat', cursive;
+}
+
+/* ------------------------------------------------------------------ */
+/* Botón                                                               */
+/* ------------------------------------------------------------------ */
+
+.letter-launch {
+  position: absolute;
+  left: 50%;
+  bottom: calc(clamp(12px, 2.2vh, 22px) + env(safe-area-inset-bottom, 0px));
+  z-index: 3;
+  transform: translate(-50%, 22px) scale(0.94);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 1.4s ease,
+    transform 1.6s var(--lt-ease),
+    visibility 0s linear 1.6s;
+}
+.letter-launch.is-on {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) scale(1);
+  transition:
+    opacity 1.4s ease,
+    transform 1.6s var(--lt-ease),
+    visibility 0s;
+}
+.letter-launch.is-instant,
+.letter-launch.is-instant * {
+  transition: none !important;
+}
+
+/* Flotación suave (separada de la entrada y del hover) */
+.letter-float {
+  position: relative;
+  animation: letter-bob 5.2s ease-in-out infinite;
+}
+.letter-launch:not(.is-on) .letter-float,
+.letter-launch:not(.is-on) .letter-halo,
+.letter-launch:not(.is-on) .letter-spark,
+.letter-launch:not(.is-on) .letter-btn-shine {
+  animation-play-state: paused;
+}
+@keyframes letter-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.letter-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  min-height: 52px;
+  max-width: calc(100vw - 32px);
+  padding: 0.55em 1.5em 0.55em 1.05em;
+  border: 1px solid rgba(255, 214, 110, 0.55);
+  border-radius: 999px;
+  overflow: hidden;
+  font: 500 clamp(0.92rem, 3.6vw, 1.02rem) / 1.2 'Quicksand', system-ui, sans-serif;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+  color: #fff3c9;
+  background:
+    radial-gradient(120% 140% at 20% 0%, rgba(255, 214, 90, 0.2), rgba(255, 214, 90, 0) 60%),
+    linear-gradient(180deg, rgba(40, 28, 6, 0.72), rgba(16, 10, 2, 0.82));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 200, 0.22),
+    inset 0 0 0 1px rgba(255, 220, 120, 0.06),
+    0 0 22px rgba(255, 196, 40, 0.28),
+    0 8px 24px rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    transform 0.4s var(--lt-ease),
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
+}
+.letter-btn:hover {
+  transform: translateY(-1px) scale(1.03);
+  border-color: rgba(255, 226, 140, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 200, 0.28),
+    0 0 34px rgba(255, 200, 50, 0.45),
+    0 10px 28px rgba(0, 0, 0, 0.55);
+}
+.letter-btn:active {
+  transform: scale(0.98);
+}
+.letter-btn:focus-visible {
+  outline: 2px solid var(--lt-gold-1);
+  outline-offset: 4px;
+}
+
+.letter-btn-icon {
+  position: relative;
+  flex: none;
+  display: grid;
+  width: 36px;
+  height: 26px;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 60, 0.55));
+}
+.letter-btn-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.letter-btn-label {
+  position: relative;
+  text-shadow: 0 0 12px rgba(255, 200, 60, 0.35);
+}
+
+/* Reflejo que cruza el cristal de vez en cuando */
+.letter-btn-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 250, 220, 0) 30%,
+    rgba(255, 250, 220, 0.22) 46%,
+    rgba(255, 250, 220, 0.05) 54%,
+    rgba(255, 250, 220, 0) 62%
+  );
+  transform: translateX(-120%);
+  animation: letter-shine 6.5s ease-in-out 1.8s infinite;
+}
+@keyframes letter-shine {
+  0% {
+    transform: translateX(-120%);
+  }
+  28%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+/* Halo que late despacio, invitando a tocar */
+.letter-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(255, 214, 90, 0.45);
+  opacity: 0;
+  animation: letter-halo 3.6s ease-out 1.2s infinite;
+}
+@keyframes letter-halo {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.1, 1.45);
+  }
+}
+
+/* Destellos de cuatro puntas alrededor del botón */
+.letter-sparks {
+  position: absolute;
+  inset: -12px -14px;
+  pointer-events: none;
+}
+.letter-spark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  background: radial-gradient(circle, #fffbe6 0 1.2px, rgba(255, 230, 140, 0.9) 1.6px, rgba(255, 210, 60, 0) 60%);
+  animation: letter-twinkle 4.2s ease-in-out infinite;
+}
+.letter-spark::before,
+.letter-spark::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(rgba(255, 240, 180, 0), #fff6cc, rgba(255, 240, 180, 0));
+  transform: translate(-50%, -50%);
+}
+.letter-spark::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.letter-spark.s0 {
+  left: 6px;
+  top: 2px;
+  animation-delay: 0.4s;
+}
+.letter-spark.s1 {
+  right: 10px;
+  top: -2px;
+  width: 8px;
+  height: 8px;
+  animation-delay: 1.5s;
+}
+.letter-spark.s2 {
+  right: 0;
+  bottom: 6px;
+  width: 12px;
+  height: 12px;
+  animation-delay: 2.7s;
+}
+.letter-spark.s3 {
+  left: 30%;
+  bottom: -2px;
+  width: 7px;
+  height: 7px;
+  animation-delay: 3.4s;
+}
+@keyframes letter-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1) rotate(20deg);
+  }
+  30% {
+    opacity: 0;
+    transform: scale(0.5) rotate(45deg);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Diálogo                                                             */
+/* ------------------------------------------------------------------ */
+
+.letter-dialog {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  color: var(--lt-ink);
+  background: transparent;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+.letter-dialog:not([open]) {
+  display: none;
+}
+.letter-dialog::backdrop {
+  background: transparent;
+}
+.letter-dialog:focus {
+  outline: none;
+}
+
+/* Velo oscuro: el ramo sigue brillando, suave y desenfocado, detrás */
+.letter-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(20, 12, 0, 0.42), rgba(0, 0, 0, 0.72) 100%),
+    rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+}
+.letter-dialog.is-open .letter-veil {
+  animation: lt-fade-in 0.7s ease both;
+}
+.letter-dialog.is-closing .letter-veil {
+  animation: lt-fade-out 0.42s ease both;
+}
+
+.letter-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+.letter-stage > * {
+  grid-area: 1 / 1;
+}
+
+/* Botón cerrar: arriba a la derecha, sobre el velo */
+.letter-close {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  right: calc(14px + env(safe-area-inset-right, 0px));
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(255, 214, 110, 0.45);
+  border-radius: 50%;
+  color: #fff0c0;
+  background: rgba(24, 16, 2, 0.6);
+  box-shadow: 0 0 18px rgba(255, 196, 40, 0.18);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    transform 0.3s var(--lt-ease),
+    border-color 0.3s ease,
+    background-color 0.3s ease;
+}
+.letter-close svg {
+  width: 20px;
+  height: 20px;
+}
+.letter-close:hover {
+  transform: rotate(90deg);
+  border-color: rgba(255, 230, 150, 0.85);
+  background: rgba(40, 28, 6, 0.75);
+}
+.letter-close:focus-visible {
+  outline: 2px solid var(--lt-gold-1);
+  outline-offset: 3px;
+}
+.letter-dialog.is-open .letter-close {
+  animation: lt-fade-in 0.6s ease 0.9s both;
+}
+.letter-dialog.is-closing .letter-close {
+  animation: lt-fade-out 0.3s ease both;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sobre de la animación de apertura                                   */
+/* ------------------------------------------------------------------ */
+
+.letter-env {
+  --w: min(78vw, 380px);
+  position: relative;
+  width: var(--w);
+  height: calc(var(--w) * 0.625);
+  perspective: 900px;
+  opacity: 0;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 26px rgba(255, 196, 60, 0.28));
+}
+.env-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #d9bb72, #ecd69c 60%, #f1dfab);
+  box-shadow: inset 0 0 0 1px rgba(160, 110, 20, 0.35);
+}
+.env-paper {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 6%;
+  height: 86%;
+  z-index: 1;
+  padding: 11% 10% 0;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #fdf7e6, #f6e8c2);
+  box-shadow: 0 -2px 10px rgba(90, 60, 10, 0.18);
+}
+.env-paper-line {
+  display: block;
+  height: 2px;
+  margin: 0 0 10%;
+  border-radius: 2px;
+  background: rgba(59, 42, 20, 0.28);
+}
+.env-paper-line:nth-child(1) {
+  width: 38%;
+}
+.env-paper-line:nth-child(3) {
+  width: 72%;
+}
+.env-pocket {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: 5px;
+}
+.env-pocket-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.env-flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 62%;
+  z-index: 3;
+  transform-origin: 50% 0;
+  transform-style: preserve-3d;
+}
+.env-flap-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 3px 3px rgba(90, 60, 10, 0.18));
+}
+.env-seal {
+  position: absolute;
+  left: 50%;
+  bottom: -9%;
+  width: 22%;
+  aspect-ratio: 1;
+  transform: translate(-50%, 0) rotate(-6deg);
+  backface-visibility: hidden;
+  filter: drop-shadow(0 2px 3px rgba(60, 10, 0, 0.45));
+}
+.env-seal-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.letter-dialog.is-open .letter-env {
+  animation:
+    env-in 0.5s var(--lt-ease) both,
+    env-out 0.5s ease-in 1.12s forwards;
+}
+.letter-dialog.is-open .env-flap {
+  animation: flap-open 0.55s cubic-bezier(0.45, 0, 0.25, 1) 0.38s both;
+}
+.letter-dialog.is-open .env-seal {
+  animation: seal-pop 0.4s ease 0.3s both;
+}
+.letter-dialog.is-open .env-paper {
+  animation: paper-up 0.5s var(--lt-ease) 0.82s both;
+}
+.letter-dialog.is-closing .letter-env {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes env-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.84) rotate(-2deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes env-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(34%) scale(0.92);
+  }
+}
+@keyframes flap-open {
+  0% {
+    transform: rotateX(0deg);
+    z-index: 3;
+  }
+  49% {
+    z-index: 3;
+  }
+  50% {
+    z-index: 0;
+  }
+  100% {
+    transform: rotateX(178deg);
+    z-index: 0;
+  }
+}
+@keyframes seal-pop {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) rotate(-6deg) scale(1);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(-50%, 0) rotate(-6deg) scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 0) rotate(-6deg) scale(0.9);
+  }
+}
+@keyframes paper-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-46%);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Hoja de la carta                                                    */
+/* ------------------------------------------------------------------ */
+
+.letter-card {
+  --pad-x: clamp(24px, 6.5vw, 58px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(92vw, 620px);
+  max-height: 82vh;
+  max-height: 82dvh;
+  border-radius: 3px;
+  color: var(--lt-ink);
+  pointer-events: auto;
+  background-color: #f8edcd;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .12 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .4 0 0 0 0 .15 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 120% 90% at 50% 45%, rgba(255, 252, 238, 0.7), rgba(255, 252, 238, 0) 60%),
+    radial-gradient(ellipse 140% 110% at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(170, 120, 40, 0.22) 100%),
+    linear-gradient(170deg, #fbf3dc 0%, #f7ebc9 55%, #f3e3b8 100%);
+  box-shadow:
+    0 0 0 1px rgba(200, 150, 50, 0.55),
+    0 1px 0 1px rgba(255, 240, 190, 0.25),
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 90px rgba(255, 190, 40, 0.16);
+  opacity: 0;
+}
+/* Doble filete dorado, como papel con borde de pan de oro */
+.letter-card::before,
+.letter-card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border-radius: 2px;
+  z-index: 1;
+}
+.letter-card::before {
+  inset: 9px;
+  border: 1px solid rgba(190, 138, 30, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 236, 170, 0.35);
+}
+.letter-card::after {
+  inset: 13px;
+  border: 0.5px solid rgba(190, 138, 30, 0.3);
+}
+
+.letter-scroll {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 105, 30, 0.45) transparent;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    transparent 100%
+  );
+  transition:
+    --fade-top 0.35s ease,
+    --fade-bottom 0.35s ease;
+}
+.letter-card.fade-top .letter-scroll {
+  --fade-top: 44px;
+}
+.letter-card.fade-bottom .letter-scroll {
+  --fade-bottom: 56px;
+}
+.letter-scroll:focus {
+  outline: none;
+}
+.letter-scroll:focus-visible {
+  outline: 1px dashed rgba(150, 105, 30, 0.5);
+  outline-offset: -18px;
+}
+.letter-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.letter-scroll::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: rgba(150, 105, 30, 0.4);
+}
+
+.letter-body {
+  padding: clamp(28px, 6vw, 50px) var(--pad-x) clamp(30px, 6vw, 48px);
+  font-family: var(--lt-hand);
+  font-weight: 500;
+  font-size: clamp(1.3rem, 4.9vw, 1.55rem);
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+.letter-body::after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+.letter-flower {
+  float: right;
+  width: clamp(74px, 19vw, 112px);
+  margin: -8px -10px 4px 12px;
+  shape-outside: ellipse(46% 50% at 55% 45%);
+  transform: rotate(10deg);
+  mix-blend-mode: multiply;
+  opacity: 0;
+}
+.letter-flower-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(1px 2px 1.5px rgba(120, 80, 20, 0.25));
+}
+
+.letter-greeting {
+  margin: 0.15em 0 0.35em;
+  font-family: var(--lt-script);
+  font-weight: 400;
+  font-size: clamp(2.3rem, 9vw, 3.1rem);
+  line-height: 1.15;
+  color: #4a2f0e;
+}
+.letter-p {
+  margin: 0 0 0.7em;
+  text-indent: 1.4em;
+  color: var(--lt-ink);
+}
+.letter-sign {
+  clear: both;
+  margin-top: 1.1em;
+  padding-right: 0.2em;
+  text-align: right;
+}
+.letter-closing {
+  margin: 0;
+  color: var(--lt-ink-soft);
+}
+.letter-signature {
+  margin: 0.05em 0 0;
+  font-family: var(--lt-script);
+  font-size: clamp(2.1rem, 8vw, 2.8rem);
+  line-height: 1.2;
+  color: #4a2f0e;
+}
+
+/* Entrada de la hoja: sale del sobre y se despliega */
+.letter-dialog.is-open .letter-card {
+  animation: card-unfold 0.75s var(--lt-ease) 1.02s both;
+}
+.letter-dialog.is-open .letter-flower {
+  animation: lt-fade-in 1.2s ease 1.5s both;
+}
+.letter-dialog.is-closing .letter-card {
+  animation: card-fold 0.42s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+@keyframes card-unfold {
+  0% {
+    opacity: 0;
+    transform: translateY(-4%) scale(0.56, 0.3);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes card-fold {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(18px) scale(0.9, 0.55);
+  }
+}
+
+/* Tinta: cada línea aparece como si se escribiera de izquierda a derecha */
+.letter-ink {
+  opacity: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 40%, transparent 60% 100%);
+  mask-image: linear-gradient(90deg, #000 0 40%, transparent 60% 100%);
+  -webkit-mask-size: 260% 100%;
+  mask-size: 260% 100%;
+  -webkit-mask-position: 100% 0;
+  mask-position: 100% 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.letter-dialog.is-open .letter-ink {
+  animation: ink-in 1.25s cubic-bezier(0.3, 0.1, 0.3, 1) var(--d, 1.4s) both;
+}
+.letter-dialog.is-read .letter-ink {
+  animation: none;
+  opacity: 1;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.letter-dialog.is-read .letter-flower {
+  animation: none;
+  opacity: 1;
+}
+@keyframes ink-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+  }
+}
+
+@keyframes lt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes lt-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Pantallas bajas: la hoja aprovecha más alto                         */
+/* ------------------------------------------------------------------ */
+
+@media (max-height: 560px) {
+  .letter-card {
+    max-height: 90vh;
+    max-height: 90dvh;
+  }
+  .letter-close {
+    top: 8px;
+    right: 8px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Movimiento reducido: solo fundidos                                  */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .letter-float,
+  .letter-halo,
+  .letter-spark,
+  .letter-btn-shine {
+    animation: none;
+  }
+  .letter-launch,
+  .letter-launch.is-on {
+    transform: translate(-50%, 0);
+  }
+  .letter-dialog.is-open .letter-env {
+    animation: none;
+    display: none;
+  }
+  .letter-dialog.is-open .letter-card {
+    animation: lt-fade-in 0.5s ease both;
+  }
+  .letter-dialog.is-open .letter-flower {
+    animation: lt-fade-in 0.5s ease both;
+  }
+  .letter-dialog.is-open .letter-close {
+    animation: lt-fade-in 0.4s ease both;
+  }
+  .letter-dialog.is-open .letter-ink {
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation: lt-fade-in 0.6s ease var(--d, 0.2s) both;
+  }
+  .letter-dialog.is-closing .letter-card {
+    animation: lt-fade-out 0.26s ease both;
+  }
+  .letter-dialog.is-closing .letter-veil {
+    animation: lt-fade-out 0.26s ease both;
+  }
+}
