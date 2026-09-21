@@ -2,7 +2,7 @@
  * Música generativa con Web Audio: canción de cuna original de caja musical
  * sobre un pad muy suave, con reverb y eco. Todo sintetizado, sin archivos.
  */
-import { DEBUG } from '../config';
+import { CONFIG, DEBUG } from '../config';
 import { Random } from '../core/math';
 import { playChime, playShimmer } from './fx';
 import { Sequencer } from './sequencer';
@@ -55,7 +55,7 @@ export class Music {
     let synth: Synth;
     try {
       ctx = new Ctor({ latencyHint: 'playback' });
-      synth = new Synth(ctx, this.rng.fork());
+      synth = new Synth(ctx, this.rng.fork(), CONFIG.music.volume);
     } catch {
       return;
     }
@@ -120,7 +120,7 @@ export class Music {
     this.pruneChimes(now);
     if (this.chimeEnds.length >= CHIME_MAX_FLIGHT) return;
     this.lastChime = now;
-    this.chimeEnds.push(playChime(synth, seq, this.rng, now + 0.01, pan, intensity));
+    this.chimeEnds.push(playChime(synth, seq, this.rng, now + 0.01, pan, intensity * CONFIG.music.chimes));
   }
 
   /** Destello brillante (estrella fugaz, constelación). */
@@ -130,7 +130,7 @@ export class Music {
     const now = ctx.currentTime;
     if (now - this.lastShimmer < SHIMMER_MIN_GAP) return;
     this.lastShimmer = now;
-    playShimmer(synth, this.rng, now + 0.02, pan);
+    playShimmer(synth, this.rng, now + 0.02, pan, CONFIG.music.chimes);
   }
 
   /** Reinicia la melodía desde el principio. */

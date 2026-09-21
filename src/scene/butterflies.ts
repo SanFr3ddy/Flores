@@ -53,6 +53,8 @@ export class ButterflyLayer implements Layer {
   private prevH = 1;
   private lastPx = 0;
   private lastPy = 0;
+  /** world.time en que las mariposas pueden empezar a entrar. */
+  private gateAt = Infinity;
   private sprites: ButterflySprite[] = [];
   private readonly glow = glowSprite('#ffc83a', 0.3, 128);
 
@@ -65,8 +67,9 @@ export class ButterflyLayer implements Layer {
     this.lastPx = world.pointer.x;
     this.lastPy = world.pointer.y;
     const rng = this.rng;
-    // Entradas escalonadas entre ~9 y ~16 s.
-    const slots = [9.2, 10.8, 12.6, 14.2, 15.6];
+    // Entradas escalonadas (segundos después de que se abre la "puerta": ramo >= 6 flores o t >= 14).
+    const slots = [0, 1.7, 3.6, 5.4, 7.2];
+    this.gateAt = Infinity;
     this.flies = [];
     for (let i = 0; i < MAX_BUTTERFLIES; i++) {
       this.flies.push({
@@ -80,11 +83,11 @@ export class ButterflyLayer implements Layer {
         flap: rng.float(0, TAU),
         flapHz: rng.float(5, 7),
         open: 1,
-        span: rng.float(28, 40),
+        span: rng.float(26, 38),
         speed: rng.float(70, 100),
         seed: rng.float(0, 100),
         sprite: i % this.sprites.length,
-        enterAt: (slots[i] ?? 15) + rng.float(-0.5, 0.5),
+        enterAt: (slots[i] ?? 7) + rng.float(0, 0.6),
         decideAt: 0,
         targetId: -1,
         landDx: 0,
@@ -119,7 +122,7 @@ export class ButterflyLayer implements Layer {
 
   /** Tamaño efectivo (no dejamos que se vuelvan diminutas en el móvil). */
   private unit(world: World): number {
-    return Math.max(world.scale, 0.62);
+    return Math.max(world.scale, 0.72);
   }
 
   private findFlower(world: World, id: number): FlowerAnchor | null {
@@ -199,12 +202,13 @@ export class ButterflyLayer implements Layer {
     this.lastPx = pointer.x;
     this.lastPy = pointer.y;
     const pSpeed = pointer.active ? Math.hypot(pvx, pvy) : 0;
+    if (this.gateAt === Infinity && (world.bouquet.count >= 6 || t >= 14)) this.gateAt = t;
 
     for (let i = 0; i < this.count; i++) {
       const b = this.flies[i] as Butterfly;
 
       if (b.mode === 'hidden') {
-        if (t < b.enterAt) continue;
+        if (t < this.gateAt + b.enterAt) continue;
         // Entra desde un costado, fuera de pantalla.
         const side = this.rng.sign();
         b.x = side < 0 ? -40 * S : W + 40 * S;

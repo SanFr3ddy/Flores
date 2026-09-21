@@ -16,8 +16,14 @@ export interface OverlayCallbacks {
 const T = CONFIG.timeline;
 /** El subtítulo aparece un poco después del título. */
 const SUBTITLE_DELAY = 1.2;
-/** La pista se queda visible este tiempo (el sobre aparece luego en el mismo lugar). */
-const HINT_DURATION = 6;
+/** Tras completar el ramo, "¡Tu ramo está completo!" brilla este tiempo y luego se apaga
+ *  (antes de que aparezca el sobre en el mismo lugar, a completeAt + letterDelay). */
+const HINT_DONE = Math.max(1, T.letterDelay - 1.2);
+/** Frases de armado + frases finales, en una sola lista. */
+const BUILD = CONFIG.messages.length;
+const FINALE = CONFIG.finale.length;
+
+type HintState = 'off' | 'progress' | 'done';
 /** Duración de la salida de una frase (ui.css: .msg.is-out). */
 const MSG_OUT = 1.1;
 
@@ -33,6 +39,9 @@ export class Overlay {
   private readonly subtitle: HTMLParagraphElement;
   private readonly lines: HTMLParagraphElement[] = [];
   private readonly hint: HTMLDivElement;
+  private readonly hintText: HTMLSpanElement;
+  private readonly hintCount: HTMLSpanElement;
+  private readonly hintFill: HTMLSpanElement;
   private readonly controls: HTMLDivElement;
   private readonly musicButton: HTMLButtonElement;
   private intro: Intro | null = null;
@@ -42,10 +51,10 @@ export class Overlay {
   private titleOn = false;
   private subtitleOn = false;
   private msgIndex = -1;
-  private hintOn = false;
-  private tapped = false;
+  private hintState: HintState = 'off';
+  private hintShown = -1;
+  private hintTotal = -1;
   private lastTime = 0;
-  private unsubscribeTap: (() => void) | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -64,15 +73,25 @@ export class Overlay {
     this.subtitle = el('p', 'ui-subtitle', {}, CONFIG.subtitle);
 
     const messages = el('div', 'ui-messages', { 'aria-live': 'polite' });
-    CONFIG.messages.forEach((text, i) => {
-      const line = el('p', i === CONFIG.messages.length - 1 ? 'msg is-last' : 'msg');
+    [...CONFIG.messages, ...CONFIG.finale].forEach((text, i) => {
+      const line = el('p', i === BUILD + FINALE - 1 ? 'msg is-last' : 'msg');
       setTextWithEmoji(line, text);
       line.setAttribute('aria-hidden', 'true');
       this.lines.push(line);
       messages.append(line);
     });
 
-    this.hint = el('div', 'ui-hint', { 'aria-hidden': 'true' }, CONFIG.hint);
+    // Pista con progreso: "Toca la pantalla…  7 / 26" y una barrita dorada
+    this.hint = el('div', 'ui-hint', { 'aria-hidden': 'true' });
+    const hintRow = el('span', 'ui-hint-row');
+    this.hintText = el('span', 'ui-hint-text');
+    setTextWithEmoji(this.hintText, CONFIG.hint);
+    this.hintCount = el('span', 'ui-hint-count');
+    hintRow.append(this.hintText, this.hintCount);
+    const bar = el('span', 'ui-hint-bar');
+    this.hintFill = el('span', 'ui-hint-fill');
+    bar.append(this.hintFill);
+    this.hint.append(hintRow, bar);
 
     // Controles: música y repetir
     this.controls = el('div', 'ui-controls');
@@ -126,11 +145,6 @@ export class Overlay {
 
   /** Sincroniza título, mensajes y pista con el tiempo de escena. Se llama cada frame. */
   update(world: World): void {
-    if (!this.unsubscribeTap) {
-      this.unsubscribeTap = world.events.on('tap', () => {
-        this.tapped = true;
-      });
-    }
     const t = world.time;
     // El tiempo retrocedió sin reset() explícito: la escena se reinició.
     if (t + 0.5 < this.lastTime) this.reset();
@@ -149,15 +163,11 @@ export class Overlay {
       this.toggleAnimated(this.subtitle, subOn, t - T.title - SUBTITLE_DELAY);
     }
 
-    const n = this.lines.length;
-    const idx = t < T.messagesStart ? -1 : Math.min(n - 1, Math.floor((t - T.messagesStart) / T.messageInterval));
-    if (idx !== this.msgIndex) this.showMessage(idx, t);
+    const done = world.bouquet.completeAt;
+    const [idx, start] = messageAt(t, done);
+    if (idx !== this.msgIndex) this.showMessage(idx, t - start);
 
-    const hintOn = !this.tapped && t >= T.hint && t < T.hint + HINT_DURATION;
-    if (hintOn !== this.hintOn) {
-      this.hintOn = hintOn;
-      this.hint.classList.toggle('is-on', hintOn);
-    }
+    this.updateHint(world, t, done);
   }
 
   /** Vuelve el texto al estado inicial (botón "repetir"). */
@@ -169,15 +179,20 @@ export class Overlay {
     }
     for (const line of this.lines) line.setAttribute('aria-hidden', 'true');
     this.veil.classList.remove('is-on');
-    this.hint.classList.remove('is-on');
+    this.hint.classList.remove('is-on', 'is-done', 'is-pop');
+    this.hintText.textContent = '';
+    setTextWithEmoji(this.hintText, CONFIG.hint);
+    this.hintCount.textContent = '';
+    this.hintFill.style.transform = 'scaleX(0)';
     void this.stage.offsetWidth; // aplica el estado oculto sin transición
     this.stage.classList.remove('is-instant');
 
     this.titleOn = false;
     this.subtitleOn = false;
     this.msgIndex = -1;
-    this.hintOn = false;
-    this.tapped = false;
+    this.hintState = 'off';
+    this.hintShown = -1;
+    this.hintTotal = -1;
     this.lastTime = 0;
   }
 
@@ -204,11 +219,48 @@ export class Overlay {
     }
   }
 
-  private showMessage(idx: number, t: number): void {
+  /** Pista inferior: progreso del ramo y, al completarlo, un brillo antes de apagarse. */
+  private updateHint(world: World, t: number, done: number | null): void {
+    const { count, total } = world.bouquet;
+    let state: HintState = 'off';
+    if (total > 0 && t >= T.hint) {
+      if (done === null) state = 'progress';
+      else if (t < done + HINT_DONE) state = 'done';
+    }
+
+    if (state !== this.hintState) {
+      const prev = this.hintState;
+      this.hintState = state;
+      this.hint.classList.toggle('is-on', state !== 'off');
+      if (state === 'done') {
+        setTextWithEmoji(this.hintText, CONFIG.hintDone);
+        this.hint.classList.add('is-done');
+      } else if (state === 'progress') {
+        if (prev === 'done' || this.hint.classList.contains('is-done')) setTextWithEmoji(this.hintText, CONFIG.hint);
+        this.hint.classList.remove('is-done');
+      }
+      // al apagarse desde 'done' conserva el texto final mientras se desvanece
+    }
+
+    if (state === 'off') return;
+    const shown = Math.min(count, total);
+    if (shown !== this.hintShown || total !== this.hintTotal) {
+      const grew = this.hintShown >= 0 && shown > this.hintShown;
+      this.hintShown = shown;
+      this.hintTotal = total;
+      this.hintCount.textContent = `${shown} / ${total}`;
+      this.hintFill.style.transform = `scaleX(${(shown / total).toFixed(4)})`;
+      if (grew && !world.reducedMotion) {
+        this.hint.classList.remove('is-pop');
+        void this.hint.offsetWidth; // reinicia el "pop"
+        this.hint.classList.add('is-pop');
+      }
+    }
+  }
+
+  private showMessage(idx: number, elapsed: number): void {
     const prev = this.msgIndex;
     this.msgIndex = idx;
-    const start = T.messagesStart + Math.max(0, idx) * T.messageInterval;
-    const elapsed = t - start;
 
     this.lines.forEach((line, i) => {
       if (i === idx) {
@@ -216,7 +268,7 @@ export class Overlay {
         line.classList.remove('is-out');
         line.classList.add('is-in');
         line.removeAttribute('aria-hidden');
-      } else if (i === prev && idx > prev && elapsed < MSG_OUT) {
+      } else if (i === prev && idx > prev && elapsed >= 0 && elapsed < MSG_OUT) {
         // Sale flotando hacia arriba mientras entra la siguiente
         line.style.setProperty('--d', `${(-Math.max(0, elapsed)).toFixed(2)}s`);
         line.classList.remove('is-in');
@@ -228,4 +280,21 @@ export class Overlay {
       }
     });
   }
+}
+
+/**
+ * Frase visible en el instante t y el momento en que empezó.
+ * Antes de completar: frases de armado (la última espera). Después: frases finales.
+ */
+function messageAt(t: number, done: number | null): [number, number] {
+  if (done !== null) {
+    const f0 = done + T.finaleDelay;
+    if (t >= f0) {
+      const j = Math.min(FINALE - 1, Math.floor((t - f0) / T.finaleInterval));
+      return [BUILD + j, f0 + j * T.finaleInterval];
+    }
+  }
+  if (t < T.messagesStart) return [-1, 0];
+  const i = Math.min(BUILD - 1, Math.floor((t - T.messagesStart) / T.messageInterval));
+  return [i, T.messagesStart + i * T.messageInterval];
 }

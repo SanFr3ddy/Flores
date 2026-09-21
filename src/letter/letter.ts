@@ -190,7 +190,8 @@ const INK_START = 1.35;
 const INK_START_REDUCED = 0.25;
 
 /**
- * Botón con sobre (abajo al centro) que aparece en CONFIG.timeline.letter y abre
+ * Botón con sobre (abajo al centro) que aparece cuando el ramo está completo
+ * (world.bouquet.completeAt + CONFIG.timeline.letterDelay) y abre
  * la carta de CONFIG.letter en un diálogo modal: el sobre se abre, la hoja sale
  * y se despliega, y los párrafos aparecen uno tras otro como tinta fresca.
  */
@@ -307,7 +308,9 @@ export class Letter {
   /** Muestra el botón cuando llega su momento. Se llama cada frame (barato). */
   update(world: World): void {
     const t = world.time;
-    const due = CONFIG.timeline.letter;
+    const done = world.bouquet.completeAt;
+    // Solo cuando el ramo está completo (antes no hay carta)
+    const due = done === null ? Infinity : done + CONFIG.timeline.letterDelay;
     const shouldShow = t >= due;
     // Salto grande hacia atrás (repetir) o adelante (?t=): cambio sin animación
     const jumped = Math.abs(t - this.lastTime) > 0.5 || t - due > 0.5;

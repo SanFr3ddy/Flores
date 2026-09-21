@@ -103,7 +103,7 @@ export class HeartConstellation {
         delay: rng.float(0, GLIDE_SPREAD),
         r: rng.float(1.2, 1.8),
         tint: rng.pick([0, 1, 1, 3]),
-        appear: rng.float(0.4, 2.6),
+        appear: rng.float(0, 1),
         s1: rng.float(0.6, 1.6),
         p1: rng.float(0, Math.PI * 2),
         special: false,
@@ -160,8 +160,15 @@ export class HeartConstellation {
     this.glow = canvas;
   }
 
+  /** Segundos desde que empieza a formarse (muy negativo si el ramo no está completo). */
+  private phase(world: World): number {
+    const done = world.bouquet.completeAt;
+    if (done === null) return -1e6;
+    return world.time - done - CONFIG.timeline.constellationDelay;
+  }
+
   update(world: World): void {
-    const T = world.time - CONFIG.timeline.constellation;
+    const T = this.phase(world);
     if (!this.emitted && T >= DONE_AT) {
       this.emitted = true;
       world.events.emit('constellation', { x: this.cx, y: this.cy });
@@ -170,13 +177,13 @@ export class HeartConstellation {
 
   draw(g: CanvasRenderingContext2D, world: World, ox: number, oy: number): void {
     const t = world.time;
-    const T = t - CONFIG.timeline.constellation;
+    const T = this.phase(world);
     const W = world.width;
     const H = world.height;
     const motion = world.reducedMotion ? 0.4 : 1;
     const formed = smoothstep(DONE_AT - 0.6, DONE_AT + 2.5, T);
     // Respiración suave una vez formado.
-    const breath = Math.sin(T * 1.15 * motion);
+    const breath = formed > 0 ? Math.sin(T * 1.15 * motion) : 0;
     const scale = this.size * (1 + 0.022 * breath * formed);
     const cx = this.cx + ox;
     const cy = this.cy + oy;
@@ -245,7 +252,8 @@ export class HeartConstellation {
     const flare = starFlare();
     for (let i = 0; i < n; i++) {
       const s = this.stars[i]!;
-      const appear = smoothstep(s.appear, s.appear + 1.2, t);
+      // Nacen al completarse el ramo (T = -constellationDelay), un poco antes de planear.
+      const appear = smoothstep(s.appear - 1.5, s.appear - 0.5, T);
       if (appear <= 0) continue;
       const k = ease.inOutCubic(clamp01((T - s.delay) / GLIDE));
       const sx = s.su * W;

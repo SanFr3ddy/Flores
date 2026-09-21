@@ -32,7 +32,7 @@ export function playChime(synth: Synth, seq: Sequencer, rng: Random, time: numbe
 }
 
 /** Glissando suave y ascendente de campanitas (pentatónica), muy mojado de reverb. */
-export function playShimmer(synth: Synth, rng: Random, time: number, pan: number): void {
+export function playShimmer(synth: Synth, rng: Random, time: number, pan: number, gain = 1): void {
   const count = 7;
   const startIdx = rng.int(0, 2);
   const p = clampPan(pan);
@@ -41,7 +41,7 @@ export function playShimmer(synth: Synth, rng: Random, time: number, pan: number
     const midi = (CHIME_NOTES[idx % CHIME_NOTES.length] ?? 84) + (idx >= CHIME_NOTES.length ? 12 : 0);
     const tail = i / (count - 1);
     synth.bell(time + i * 0.035 + rng.next() * 0.008, Math.min(103, midi), {
-      velocity: 0.13 + 0.07 * Math.sin(Math.PI * tail),
+      velocity: (0.13 + 0.07 * Math.sin(Math.PI * tail)) * gain,
       pan: clampPan(p + (tail - 0.5) * 0.5),
       reverb: 0.95,
       delay: 0.25,

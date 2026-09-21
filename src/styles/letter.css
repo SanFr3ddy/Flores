@@ -793,6 +793,36 @@
     top: 8px;
     right: 8px;
   }
+  .letter-body {
+    padding-top: 26px;
+    padding-bottom: 26px;
+    font-size: clamp(1.15rem, 5.4vh, 1.4rem);
+  }
+  .letter-greeting {
+    font-size: clamp(2rem, 11vh, 2.6rem);
+  }
+  .letter-flower {
+    width: clamp(64px, 20vh, 96px);
+  }
+  .letter-env {
+    --w: min(60vh * 1.6, 78vw, 380px);
+  }
+}
+
+/* Celular horizontal: botón compacto, pegado al borde inferior (banda 89-98 %) */
+@media (max-height: 500px) {
+  .letter-launch {
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  .letter-btn {
+    min-height: 48px;
+    padding: 0.4em 1.2em 0.4em 0.9em;
+    font-size: 0.9rem;
+  }
+  .letter-btn-icon {
+    width: 30px;
+    height: 22px;
+  }
 }
 
 /* ------------------------------------------------------------------ */

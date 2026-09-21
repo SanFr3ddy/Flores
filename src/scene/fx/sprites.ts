@@ -113,8 +113,8 @@ export function sparkleSprite(): HTMLCanvasElement {
   const grad = g.createRadialGradient(0, 0, 0, 0, 0, r);
   grad.addColorStop(0, 'rgba(255,255,240,1)');
   grad.addColorStop(0.12, 'rgba(255,236,150,1)');
-  grad.addColorStop(0.45, 'rgba(255,200,50,0.85)');
-  grad.addColorStop(0.8, 'rgba(255,170,20,0.4)');
+  grad.addColorStop(0.45, 'rgba(255,222,110,0.9)');
+  grad.addColorStop(0.8, 'rgba(255,200,70,0.45)');
   grad.addColorStop(1, 'rgba(255,190,40,0)');
   g.fillStyle = grad;
   star(r, r * 0.1);

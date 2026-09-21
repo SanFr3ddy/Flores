@@ -53,6 +53,7 @@ export class Engine {
       rng: new Random(this.seed),
       events: new EventBus<SceneEvents>(),
       flowers: [],
+      bouquet: { count: 0, total: 0, completeAt: null },
       wind: (x, y) => this.sampleWind(x, y),
     };
     this.world = world;
@@ -110,6 +111,9 @@ export class Engine {
     w.time = 0;
     w.rng = new Random(this.seed);
     w.flowers.length = 0;
+    w.bouquet.count = 0;
+    w.bouquet.total = 0;
+    w.bouquet.completeAt = null;
     this.windNoise = w.rng.noise2D();
     for (const layer of this.layers) layer.init(w);
     for (const layer of this.layers) layer.resize(w);

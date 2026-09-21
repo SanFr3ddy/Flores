@@ -9,7 +9,7 @@ export const isPortrait = (w: number, h: number): boolean => h > w * 1.1;
  */
 export function bouquetDim(x: number, y: number, w: number, h: number): number {
   const portrait = isPortrait(w, h);
-  // Cúpula de cabezas (según el contrato de maquetación v2).
+  // Cúpula de cabezas (según el contrato de maquetación v3).
   const rx = portrait ? w * 0.5 : Math.min(w * 0.25, 440);
   const ry = h * (portrait ? 0.22 : 0.25);
   const dx = (x - w * 0.5) / rx;
@@ -40,6 +40,10 @@ export function heartLayout(w: number, h: number): { u: number; v: number; half:
   if (isPortrait(w, h)) {
     // Abajo a la izquierda, junto al haz de tallos: lejos de textos, controles y cabezas.
     return { u: 0.19, v: 0.8, half: clamp(m * 0.085, 26, 46), portrait: true };
+  }
+  if (h < 500) {
+    // Celular horizontal: más abajo, para no tocar título ni frases compactas.
+    return { u: 0.13, v: 0.52, half: clamp(m * 0.1, 30, 48), portrait: false };
   }
   // A la izquierda del ramo, arriba. El corazón mide ~0.2·min de ancho.
   return { u: 0.15, v: 0.3, half: clamp(m * 0.1, 44, 120), portrait: false };

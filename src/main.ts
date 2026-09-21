@@ -16,7 +16,7 @@ const canvas = document.querySelector<HTMLCanvasElement>('#scene');
 const uiRoot = document.querySelector<HTMLElement>('#ui');
 if (!canvas || !uiRoot) throw new Error('Falta #scene o #ui en index.html');
 
-document.title = `Flores amarillas para ${CONFIG.recipient} 💛`;
+document.title = CONFIG.title;
 
 const engine = new Engine(canvas, { seed: DEBUG.seed, speed: DEBUG.speed });
 engine
@@ -34,6 +34,7 @@ world.events.on('bloom', (e) => music.chime(panOf(e.x), e.kind === 'sunflower' ?
 world.events.on('tap', (e) => music.chime(panOf(e.x), 0.8));
 world.events.on('shootingStar', (e) => music.shimmer(panOf(e.x)));
 world.events.on('constellation', (e) => music.shimmer(panOf(e.x)));
+world.events.on('bouquetComplete', (e) => music.shimmer(panOf(e.x)));
 
 const overlay = new Overlay(uiRoot, {
   onOpen() {

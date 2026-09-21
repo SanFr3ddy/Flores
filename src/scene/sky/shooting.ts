@@ -76,7 +76,13 @@ export class ShootingStars {
     m.dy = Math.sin(angle);
     m.length = Math.min(W, H * 1.4) * rng.float(0.3, 0.48) * (secondary ? 0.75 : 1);
     // Arranca en el lado del que viene, dentro del 5%..30% superior.
-    m.x0 = dir > 0 ? W * rng.float(0.05, 0.55) : W * rng.float(0.45, 0.95);
+    if (H > W * 1.1) {
+      // Retrato: nace en el borde del que viene; la estela pasa por detrás de los textos.
+      m.x0 = dir > 0 ? W * rng.float(0.02, 0.4) : W * rng.float(0.6, 0.98);
+    } else {
+      // Horizontal: se aleja del centro para no cruzar el título ni los mensajes.
+      m.x0 = dir > 0 ? W * rng.float(0.66, 0.8) : W * rng.float(0.2, 0.34);
+    }
     m.y0 = H * rng.float(0.03, 0.26);
     // Que no baje del 55% de la pantalla.
     const maxLen = (H * 0.55 - m.y0) / m.dy;

@@ -24,9 +24,9 @@
   z-index: 2;
   user-select: none;
   -webkit-user-select: none;
-  /* Contrato de pantalla v2: título ~6-16 %, mensajes ~19-27 % */
+  /* Contrato de pantalla v3: título ~6-16 %, mensajes ~19-27 % */
   --title-y: 10.5%;
-  --msg-y: 23.5%;
+  --msg-y: 23.2%;
 }
 
 /* Sombra radial muy suave detrás del bloque de texto (nunca una caja visible) */
@@ -53,7 +53,8 @@
   transform: translate(-50%, -50%);
   display: grid;
   margin: 0;
-  padding: 0.1em 0.4em 0.18em;
+  /* relleno amplio: la máscara recorta al borde de la caja y el halo debe apagarse antes */
+  padding: max(0.5em, 44px) max(0.9em, 56px);
   font-family: 'Great Vibes', 'Brush Script MT', cursive;
   font-weight: 400;
   font-size: clamp(3rem, 10vw, 7rem);
@@ -258,22 +259,25 @@
   }
 }
 
-/* Pista inferior (el sobre de la carta aparece después en este mismo lugar) */
+/* Pista inferior con progreso (el sobre de la carta aparece después en este mismo lugar) */
 .ui-hint {
   position: absolute;
   left: 50%;
-  bottom: calc(20px + var(--safe-b));
+  bottom: calc(clamp(14px, 3.2vh, 30px) + var(--safe-b));
   transform: translate(-50%, 8px);
   width: max-content;
   max-width: calc(100vw - 32px);
-  padding: 0.6em 1.25em;
-  text-wrap: balance;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5em;
+  padding: 0.62em 1.15em 0.7em;
   border-radius: 999px;
-  font-size: clamp(0.78rem, 2.4vw, 0.9rem);
+  font-size: clamp(0.76rem, min(2.4vw, 3.4vh), 0.92rem);
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-align: center;
-  color: rgba(255, 240, 200, 0.88);
+  color: rgba(255, 240, 200, 0.9);
   background: rgba(24, 16, 2, 0.55);
   border: 1px solid rgba(255, 214, 100, 0.22);
   box-shadow: 0 0 24px rgba(255, 190, 40, 0.1);
@@ -281,15 +285,122 @@
   backdrop-filter: blur(6px);
   opacity: 0;
   transition:
-    opacity 1s ease,
-    transform 1s var(--ease-out);
+    opacity 0.9s ease,
+    transform 0.9s var(--ease-out),
+    box-shadow 0.8s ease,
+    border-color 0.8s ease;
 }
 .ui-hint.is-on {
   opacity: 1;
   transform: translate(-50%, 0);
   transition:
     opacity 1.2s ease,
-    transform 1.2s var(--ease-out);
+    transform 1.2s var(--ease-out),
+    box-shadow 0.8s ease,
+    border-color 0.8s ease;
+}
+.ui-hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75em;
+}
+/* En pantallas muy angostas el texto puede partirse; el contador nunca */
+.ui-hint-text {
+  min-width: 0;
+  text-wrap: balance;
+}
+@media (max-width: 340px) {
+  .ui-hint {
+    border-radius: 22px;
+  }
+}
+.ui-hint-text .emoji {
+  display: inline-block;
+  margin-left: 0.15em;
+}
+.ui-hint-count {
+  flex: none;
+  min-width: 3.4em;
+  padding: 0.12em 0.6em;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #ffe27a;
+  background: rgba(255, 200, 60, 0.12);
+  border: 1px solid rgba(255, 214, 100, 0.25);
+}
+.ui-hint-count:empty {
+  display: none;
+}
+.ui-hint-bar {
+  position: relative;
+  display: block;
+  height: 2px;
+  margin: 0 0.4em;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(255, 220, 130, 0.14);
+}
+.ui-hint-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f5a300, #ffd21f 60%, #fff3a3);
+  box-shadow: 0 0 8px rgba(255, 200, 50, 0.8);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.7s var(--ease-out);
+}
+/* Pequeño "pop" en cada flor nueva */
+.ui-hint.is-pop .ui-hint-count {
+  animation: count-pop 0.55s var(--ease-out);
+}
+@keyframes count-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.22);
+    color: #fff8d0;
+    background: rgba(255, 210, 70, 0.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* Ramo completo: brillo cálido */
+.ui-hint.is-done {
+  color: #fff4c8;
+  border-color: rgba(255, 220, 120, 0.6);
+  box-shadow:
+    0 0 34px rgba(255, 190, 40, 0.38),
+    inset 0 0 14px rgba(255, 200, 60, 0.12);
+}
+.ui-hint.is-done .ui-hint-count {
+  display: none;
+}
+.ui-hint.is-done .ui-hint-fill {
+  transform: scaleX(1) !important;
+}
+.ui-hint.is-on.is-done {
+  animation: hint-glow 1.6s ease-in-out;
+}
+@keyframes hint-glow {
+  0% {
+    box-shadow: 0 0 24px rgba(255, 190, 40, 0.1);
+  }
+  40% {
+    box-shadow:
+      0 0 60px rgba(255, 196, 50, 0.6),
+      inset 0 0 18px rgba(255, 210, 80, 0.25);
+  }
+  100% {
+    box-shadow:
+      0 0 34px rgba(255, 190, 40, 0.38),
+      inset 0 0 14px rgba(255, 200, 60, 0.12);
+  }
 }
 
 /* Sin transiciones ni animaciones mientras se reinicia */
@@ -734,18 +845,33 @@
 
 @media (max-aspect-ratio: 4/5) {
   .ui-stage {
-    --title-y: 11.5%;
-    --msg-y: 24%;
+    --title-y: 11.4%;
+    --msg-y: 22.4%;
+  }
+  .ui-title {
+    font-size: clamp(2.9rem, min(13vw, 7.5vh), 6.5rem);
+  }
+  .ui-subtitle {
+    top: calc(var(--title-y) + clamp(1.7rem, min(7.2vw, 4.2vh), 3.8rem));
+  }
+  .ui-messages {
+    width: min(88vw, 30em);
+    font-size: clamp(1.08rem, min(4.9vw, 2.7vh), 1.7rem);
   }
 }
 
 /* Controles arriba a la derecha: abajo al centro vive el sobre de la carta */
 @media (max-width: 700px), (max-aspect-ratio: 4/5) {
   .ui-controls {
-    top: calc(12px + var(--safe-t));
+    top: calc(10px + var(--safe-t));
     bottom: auto;
-    right: calc(12px + var(--safe-r));
+    right: calc(10px + var(--safe-r));
+    gap: 8px;
     transform: translateY(-8px);
+  }
+  .ui-btn {
+    width: 44px;
+    height: 44px;
   }
   .ui-controls.is-on {
     transform: none;
@@ -754,14 +880,32 @@
 
 /* Pantallas bajas en horizontal: el texto se compacta */
 @media (max-height: 520px) and (min-aspect-ratio: 1/1) {
+  .ui-stage {
+    --title-y: 9.5%;
+    --msg-y: 23%;
+  }
   .ui-title {
-    font-size: clamp(2.4rem, 12vh, 4rem);
+    font-size: clamp(1.9rem, 11vh, 3.6rem);
+    padding: 24px 40px;
   }
   .ui-subtitle {
-    top: calc(var(--title-y) + clamp(1.5rem, 7vh, 2.4rem));
+    top: calc(var(--title-y) + clamp(1.15rem, 6.2vh, 2.2rem));
+    font-size: clamp(0.5rem, 2.4vh, 0.7rem);
   }
   .ui-messages {
-    font-size: clamp(0.95rem, 4.5vh, 1.3rem);
+    width: min(70vw, 34em);
+    font-size: clamp(0.88rem, 4.4vh, 1.25rem);
+    line-height: 1.18;
+  }
+  .ui-hint {
+    bottom: calc(8px + var(--safe-b));
+    padding: 0.4em 1em 0.5em;
+    gap: 0.35em;
+    font-size: clamp(0.66rem, 3.2vh, 0.8rem);
+  }
+  .ui-btn {
+    width: 40px;
+    height: 40px;
   }
 }
 

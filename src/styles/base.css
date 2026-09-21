@@ -18,6 +18,10 @@ body {
 
 body {
   font-family: 'Quicksand', system-ui, sans-serif;
+  /* En celulares: sin selección de texto ni menú al mantener presionado. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #scene {

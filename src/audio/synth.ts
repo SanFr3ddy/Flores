@@ -59,7 +59,8 @@ export class Synth {
   private readonly pads: Voice[] = [];
   private readonly hasPanner: boolean;
 
-  constructor(ctx: BaseAudioContext, private readonly rng: Rng) {
+  /** @param volume volumen general 0..1 (multiplica el nivel de referencia). */
+  constructor(ctx: BaseAudioContext, private readonly rng: Rng, volume = 1) {
     this.ctx = ctx;
     this.hasPanner = typeof ctx.createStereoPanner === 'function';
 
@@ -75,7 +76,7 @@ export class Synth {
     comp.attack.value = 0.004;
     comp.release.value = 0.25;
     const level = ctx.createGain();
-    level.gain.value = OUTPUT_LEVEL;
+    level.gain.value = OUTPUT_LEVEL * Math.max(0, Math.min(1, volume));
     this.fader = ctx.createGain();
     this.fader.gain.value = 0;
     this.ducker = ctx.createGain();

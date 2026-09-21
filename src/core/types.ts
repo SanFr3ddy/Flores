@@ -38,6 +38,19 @@ export interface FlowerAnchor {
   angle: number;
 }
 
+/**
+ * Progreso del ramo. Lo escribe GardenLayer; la UI, el cielo, la carta y las
+ * partículas lo leen para saber cuándo celebrar.
+ */
+export interface BouquetState {
+  /** Flores del ramo ya agregadas (incluye las que crecen solas al inicio). */
+  count: number;
+  /** Flores necesarias para completar el ramo (0 hasta que el jardín lo decide). */
+  total: number;
+  /** world.time en que se completó (se abrió la última flor), o null si aún no. */
+  completeAt: number | null;
+}
+
 export interface SceneEvents {
   /** Toque/clic sobre la escena (no sobre botones de la UI). */
   tap: { x: number; y: number };
@@ -47,6 +60,10 @@ export interface SceneEvents {
   shootingStar: { x: number; y: number };
   /** La constelación de corazón terminó de formarse. */
   constellation: { x: number; y: number };
+  /** Se agregó una flor al ramo (por toque o sola). */
+  flowerAdded: { x: number; y: number; count: number; total: number };
+  /** El ramo quedó completo (x, y = centro del ramo). Se emite una sola vez por escena. */
+  bouquetComplete: { x: number; y: number };
   /** La escena se reinició (botón "repetir"). */
   restart: Record<string, never>;
 }
@@ -73,6 +90,8 @@ export interface World {
   events: EventBus<SceneEvents>;
   /** Cabezas de flor actuales. Las escribe GardenLayer cada frame; el resto solo las lee. */
   flowers: FlowerAnchor[];
+  /** Progreso del ramo que se arma tocando la pantalla. Lo escribe GardenLayer. */
+  bouquet: BouquetState;
   /**
    * Viento horizontal en (x, y) para el instante actual, aprox. -1..1.
    * Suave y continuo; cada capa lo multiplica por su propia amplitud.
