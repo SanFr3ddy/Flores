@@ -25,13 +25,21 @@ Todo está en [`src/config.ts`](src/config.ts):
 
 ## Publicar en Render
 
-1. En [Render](https://render.com): **New → Static Site** y conecta este repositorio.
-2. Configura:
-   - **Build Command:** `npm ci && npm run build`
-   - **Publish Directory:** `dist`
-3. Crea el sitio. Cada `git push` a `main` vuelve a publicarlo.
+**Opción A — Static Site (recomendada, gratis y más rápida):**
 
-(La versión de Node se toma de `.node-version`).
+1. **New → Static Site** y conecta este repositorio.
+2. **Build Command:** `npm ci && npm run build`
+3. **Publish Directory:** `dist`
+
+**Opción B — Web Service:**
+
+1. **Build Command:** `npm ci && npm run build`
+2. **Start Command:** `npm start` (sirve `dist/` en `0.0.0.0:$PORT` con [`server.mjs`](server.mjs)).
+
+Si el Start Command quedó como `npm run dev`, también funciona, porque en Render el servidor
+de Vite escucha en `0.0.0.0:$PORT`, aunque `npm start` es más rápido.
+
+Cada `git push` a `main` vuelve a publicarlo. La versión de Node se toma de `.node-version`.
 
 ## Parámetros útiles en la URL
 

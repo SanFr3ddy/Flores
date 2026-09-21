@@ -45,7 +45,7 @@ function renderHead(g: CanvasRenderingContext2D, spec: HeadSpec, open: number, p
   }
 }
 
-/* ---------------- Caché de cabezas abiertas (LRU) ---------------- */
+/* ---------------- Cachés de sprites ---------------- */
 
 interface Sprite {
   canvas: HTMLCanvasElement;
@@ -55,32 +55,73 @@ interface Sprite {
   radius: number;
 }
 
+/** Cabezas abiertas (LRU). */
 const CACHE_MAX = 80;
 const cache = new Map<string, Sprite>();
+/** Fotogramas intermedios de apertura (caché transitoria). */
+const OPEN_STEPS = 36;
+const FRAMES_MAX = 72;
+const frames = new Map<string, Sprite>();
+/** Lienzos libres para reutilizar (evita crear canvases durante la animación). */
+const pool: HTMLCanvasElement[] = [];
 
-function spriteFor(spec: HeadSpec, pixelRatio: number): Sprite {
+function takeCanvas(size: number): { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } {
+  for (let i = pool.length - 1; i >= 0; i--) {
+    const cv = pool[i] as HTMLCanvasElement;
+    if (cv.width !== size || cv.height !== size) continue;
+    pool.splice(i, 1);
+    const g = cv.getContext('2d');
+    if (!g) break;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalAlpha = 1;
+    g.clearRect(0, 0, size, size);
+    return { canvas: cv, g };
+  }
+  return createCanvas(size, size);
+}
+
+/** Sprite de la cabeza en el paso de apertura `step` (OPEN_STEPS = abierta del todo). */
+function spriteFor(spec: HeadSpec, pixelRatio: number, step: number): Sprite {
   const rad = Math.max(2, Math.round(spec.radius));
   const pr = Math.round(Math.min(3, Math.max(0.5, pixelRatio)) * 4) / 4;
-  const key = `${spec.kind}|${spec.seed}|${rad}|${Math.round(spec.depth * 10)}|${Math.round(spec.facing * 20)}|${pr}`;
-  const hit = cache.get(key);
+  const final = step >= OPEN_STEPS;
+  const store = final ? cache : frames;
+  const key = `${spec.kind}|${spec.seed}|${rad}|${Math.round(spec.depth * 10)}|${Math.round(spec.facing * 20)}|${pr}|${final ? 'F' : step}`;
+  const hit = store.get(key);
   if (hit) {
     // refrescar posición LRU
-    cache.delete(key);
-    cache.set(key, hit);
+    store.delete(key);
+    store.set(key, hit);
     return hit;
   }
   const ext = Math.ceil(rad * 1.32) + 2;
   const size = Math.ceil(ext * 2 * pr);
-  const { canvas, g } = createCanvas(size, size);
+  const { canvas, g } = final ? createCanvas(size, size) : takeCanvas(size);
   g.setTransform(pr, 0, 0, pr, ext * pr, ext * pr);
-  renderHead(g, { ...spec, radius: rad }, 1, rad * pr);
+  renderHead(g, { ...spec, radius: rad }, final ? 1 : step / OPEN_STEPS, rad * pr);
   const sprite: Sprite = { canvas, ext, radius: rad };
-  cache.set(key, sprite);
-  if (cache.size > CACHE_MAX) {
-    const first = cache.keys().next().value;
-    if (first !== undefined) cache.delete(first);
+  store.set(key, sprite);
+  if (store.size > (final ? CACHE_MAX : FRAMES_MAX)) {
+    const first = store.keys().next().value;
+    if (first !== undefined) {
+      const old = store.get(first);
+      store.delete(first);
+      if (!final && old && pool.length < 24) pool.push(old.canvas);
+    }
   }
   return sprite;
+}
+
+function blit(g: CanvasRenderingContext2D, spec: HeadSpec, sp: Sprite, alpha: number): void {
+  const e = sp.ext * (spec.radius / sp.radius);
+  if (alpha >= 1) {
+    g.drawImage(sp.canvas, -e, -e, e * 2, e * 2);
+    return;
+  }
+  const prev = g.globalAlpha;
+  g.globalAlpha = prev * alpha;
+  g.drawImage(sp.canvas, -e, -e, e * 2, e * 2);
+  g.globalAlpha = prev;
 }
 
 /**
@@ -100,15 +141,15 @@ export function drawFlowerHead(
   if (!(spec.radius > 0.5)) return;
   const o = clamp01(Number.isFinite(open) ? open : 0);
   if (o >= 1) {
-    const sp = spriteFor(spec, pixelRatio);
-    const k = spec.radius / sp.radius;
-    const e = sp.ext * k;
-    g.drawImage(sp.canvas, -e, -e, e * 2, e * 2);
+    blit(g, spec, spriteFor(spec, pixelRatio, OPEN_STEPS), 1);
     return;
   }
-  g.save();
-  renderHead(g, spec, o, spec.radius * Math.max(0.5, pixelRatio));
-  g.restore();
+  // Apertura: fotogramas cuantizados y cacheados, fundiendo el paso actual con el siguiente
+  const q = o * OPEN_STEPS;
+  const s0 = Math.floor(q);
+  const f = q - s0;
+  blit(g, spec, spriteFor(spec, pixelRatio, s0), 1);
+  if (f > 0.02) blit(g, spec, spriteFor(spec, pixelRatio, s0 + 1), f);
 }
 
 /**
@@ -140,4 +181,6 @@ export function drawFlowerGlow(g: CanvasRenderingContext2D, spec: HeadSpec, open
 /** Libera sprites cacheados (el jardín lo llama en resize). */
 export function clearFlowerCache(): void {
   cache.clear();
+  frames.clear();
+  pool.length = 0;
 }

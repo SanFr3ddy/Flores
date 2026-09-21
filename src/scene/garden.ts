@@ -182,10 +182,10 @@ export class GardenLayer implements Layer {
       this.endY = H * 0.86;
     } else if (lowLand) {
       halfW = W * 0.25;
-      top = H * 0.3;
-      bottom = H * 0.72;
-      this.tieY = H * 0.79;
-      this.endY = H * 0.87;
+      top = H * 0.28;
+      bottom = H * 0.69;
+      this.tieY = H * 0.765;
+      this.endY = H * 0.845;
     } else {
       halfW = Math.min(W * 0.44, 820) / 2;
       top = H * 0.3;

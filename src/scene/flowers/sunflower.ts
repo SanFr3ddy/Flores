@@ -102,7 +102,7 @@ export function drawSunflower(
         g.fillStyle = grd;
         g.fill();
         // variación de tono por pétalo
-        if (tv > 0.02) {
+        if (tv > 0.02 && open >= 1) {
           g.globalAlpha = base * fa * tv;
           g.fillStyle = tvDark ? shadowCol : lightCol;
           g.fill();

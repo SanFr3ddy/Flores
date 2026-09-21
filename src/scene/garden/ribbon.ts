@@ -57,8 +57,8 @@ export class Ribbon {
     this.bw = bundleW;
     this.wrapW = bundleW * 1.75;
     this.wrapH = bundleW * 0.95;
-    this.bowW = bundleW * 4.4;
-    this.bowH = bundleW * 2.3;
+    this.bowW = bundleW * 3.9;
+    this.bowH = bundleW * 2.05;
     this.knotW = bundleW * 0.62;
     this.knotH = bundleW * 0.78;
     this.wrap = this.renderWrap();
@@ -133,7 +133,7 @@ export class Ribbon {
       const gr = g.createLinearGradient(0, -H * 0.4, side * L, H * 0.25);
       gr.addColorStop(0, SATIN_DARK);
       gr.addColorStop(0.3, SATIN);
-      gr.addColorStop(0.5, '#efcf7c');
+      gr.addColorStop(0.5, '#e8c059');
       gr.addColorStop(0.75, SATIN);
       gr.addColorStop(1, SATIN_DARK);
       g.fillStyle = gr;
@@ -142,7 +142,7 @@ export class Ribbon {
       g.save();
       g.clip(loop);
       const hole = g.createRadialGradient(side * L * 0.55, -H * 0.05, 0, side * L * 0.55, -H * 0.05, L * 0.42);
-      hole.addColorStop(0, 'rgba(70,40,5,0.75)');
+      hole.addColorStop(0, 'rgba(60,32,4,0.85)');
       hole.addColorStop(0.6, 'rgba(90,55,10,0.35)');
       hole.addColorStop(1, 'rgba(90,55,10,0)');
       g.fillStyle = hole;
@@ -151,8 +151,8 @@ export class Ribbon {
       g.fill();
       g.restore();
       // Reflejo del satín a lo largo del borde superior.
-      g.strokeStyle = 'rgba(255,248,220,0.75)';
-      g.lineWidth = Math.max(0.8, H * 0.035);
+      g.strokeStyle = 'rgba(255,244,205,0.6)';
+      g.lineWidth = Math.max(0.8, H * 0.03);
       g.beginPath();
       g.moveTo(side * L * 0.1, -H * 0.12);
       g.bezierCurveTo(side * L * 0.38, -H * 0.5, side * L * 0.85, -H * 0.4, side * L * 0.92, -H * 0.1);

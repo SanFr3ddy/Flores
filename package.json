@@ -7,11 +7,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "start": "node server.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "shot": "node scripts/shot.mjs"
   },
   "devDependencies": {
+    "@types/node": "^22.20.4",
     "playwright-core": "^1.63.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0"
