@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: flores-amarillas-andy
+    runtime: node
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
